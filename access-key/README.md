@@ -204,3 +204,5 @@ With SMEP and SMAP being pinned bits, we cannot just turn them off in CR4. A nea
 ## Conclusion
 
 Final exploit combines all of the above and successfuly roots the kernel. The techniques described towards the end are themselves are universally applicable to many kernel bugs with harsh constraints.
+
+Congratulations to `valis` from `DragonSector` on solving this :)
