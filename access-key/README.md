@@ -1,10 +1,10 @@
-# Access\_key
+# Access\_key (1 solve)
 
 *I made a kernel driver that only allows me to get root access. Well......because only I have the key.*
 
 ## Description
 
-This challenge consists of a int overflow that triggers a race condition based on kmalloc's behaviour. The challenge involves heap spraying to gain control of the object, subsequently leak, and Ret\_to\_CFU to obtain a root shell.
+This challenge consists of a int overflow that triggers a race condition based on kmalloc's behaviour. The challenge involves heap spraying to gain control of the object, subsequently leak, and Ret\_to\_CFU to obtain a root shell. The source code for this challenge was made public after 24 hours with no solves during the CTF.
 
 ## Driver Functionality
 
@@ -49,8 +49,12 @@ if(!ref_cnt)
 }
 ```
 
-The bug is in the 4th line. `kmalloc(128,GFP_KERNEL)` CAN SLEEP. This comes from the man page of kmalloc - `GFP_KERNEL - Allocate normal kernel ram. May sleep`.
+The bug is in the 4th line. `kmalloc(128,GFP_KERNEL)` CAN SLEEP. This comes from the man page of kmalloc:
+
+`GFP_KERNEL - Allocate normal kernel ram. May sleep`.
+
 `GFP_ATOMIC` is the flag for kmalloc that does not sleep.
+
 So with the kernel actually being able to sleep, `ptr` gets kfree()-ed , but it does not get NULL-ed out. Another process can access the IOCTL interface of the driver and perform operations with a dangling `ptr`. This, in itself, isn't useful, because `ptr` is always NULL when unlinking happens in the main list. So it is effectively calling kfree(NULL).
 
 
@@ -100,12 +104,12 @@ for(i=0;i<1000;i++)
 }
 ```
 
-Run the 2 parallely, and you will gain control.
+Run the 2 parallely, and you will gain control. For best results, let the spray run in background and during that, try to spam kmalloc(128, GFP_KERNEL).
 
 ## Where to Overwrite
 
 With SMAP Enabled, we cannot just set the offset to a huge value that will make it point to userspace because it will trigger the SMAP violation. Also we don't know where the heap even is. At this point, there are couple ways to approach this. Find an object that is kmalloc()'d in the heap, and has data that will eventually be copied to userspace. Corrupt this data with `secret_value` and leak it.
-However, there is a much better and "reliable" technique.
+
 
 ## Physmap Spray
 
